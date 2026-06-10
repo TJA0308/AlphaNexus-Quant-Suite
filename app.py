@@ -35,7 +35,13 @@ execute_analytics = st.sidebar.button("⚙️ Run Quantitative Engine", use_cont
 def ingest_market_records(ticker):
     # Pulls 60 days of high-density hourly data points
     df = yf.download(ticker, period="60d", interval="1h", multi_level_index=False)
-    return df[['Close']].reset_index()
+    df = df[['Close']].reset_index()
+    
+    # FIX: Standardize the timestamp column name so it works with hourly or daily formats
+    df.columns = ['Date', 'Close']
+    
+    return df
+
 
 # Instantly pull data
 base_data = ingest_market_records(target_ticker)
