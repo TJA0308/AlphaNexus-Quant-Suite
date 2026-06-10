@@ -3,139 +3,108 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 
-# 1. APPLICATION SETUP & CONFIGURATION
-st.set_page_config(page_title="AlphaNexus Quant Analytics Suite", layout="wide")
-st.title("🏛️ AlphaNexus: Multi-Asset Quantitative Analytics Suite")
-st.caption("An institutional-grade algorithmic backtesting platform evaluating volatility structures and portfolio risk metrics.")
+# IMPORT YOUR CUSTOM MODULES (Architectural Separation)
+from strategies import run_bollinger_breakout, run_rsi_momentum
+from styles import apply_custom_theme
 
-# Core system parameters
+st.set_page_config(page_title="AlphaNexus Suite Pro", layout="wide")
+apply_custom_theme() # Instantly applies your CSS styling
+
+st.title("🏛️ AlphaNexus: Advanced Quantitative Sandbox")
+st.caption("A multi-strategy, modular backtesting software framework.")
+
 asset_pool = {
-    "Nvidia (NVDA)": "NVDA",
-    "Apple (AAPL)": "AAPL",
-    "Microsoft (MSFT)": "MSFT",
-    "Amazon (AMZN)": "AMZN",
-    "Google (GOOGL)": "GOOGL",
-    "Bitcoin (BTC-USD)": "BTC-USD"
+    "Nvidia (NVDA)": "NVDA", "Apple (AAPL)": "AAPL", "Microsoft (MSFT)": "MSFT",
+    "Amazon (AMZN)": "AMZN", "Google (GOOGL)": "GOOGL", "Bitcoin (BTC-USD)": "BTC-USD"
 }
 
-# 2. SIDEBAR SYSTEM INTERACTION LAYER
-st.sidebar.header("🛠️ Strategy & Risk Controls")
+# 1. SIDEBAR CONFIGURATION LAYER
+st.sidebar.header("📁 Suite Controller")
 selected_label = st.sidebar.selectbox("Target Core Security", list(asset_pool.keys()))
 target_ticker = asset_pool[selected_label]
 
-st.sidebar.subheader("Strategy Configurations")
-ma_window = st.sidebar.slider("Channel Baseline (Days)", min_value=10, max_value=50, value=20)
-dev_multiplier = st.sidebar.slider("Band Width Sensitivity (Std Dev)", min_value=0.5, max_value=2.5, value=1.5, step=0.1)
+# NEW FEATURE: Interactive Strategy Selection Menu
+st.sidebar.markdown("---")
+st.sidebar.subheader("Algorithmic Model Selection")
+strategy_choice = st.sidebar.selectbox("Active Core Logic", ["Bollinger Band Breakout", "RSI Momentum"])
+
+# Dynamic Sidebar Sliders based on which strategy is active
+if strategy_choice == "Bollinger Band Breakout":
+    ma_window = st.sidebar.slider("Channel Baseline (Days)", 10, 50, 20)
+    dev_multiplier = st.sidebar.slider("Band Sensitivity (Std Dev)", 0.5, 2.5, 1.5, 0.1)
+else:
+    rsi_window = st.sidebar.slider("RSI Lookback Period", 5, 30, 14)
+    oversold_line = st.sidebar.slider("Oversold Threshold (Buy)", 15, 40, 30)
+    overbought_line = st.sidebar.slider("Overbought Threshold (Sell)", 60, 85, 70)
 
 st.sidebar.markdown("---")
-execute_analytics = st.sidebar.button("⚙️ Run Quantitative Engine", use_container_width=True)
+execute_analytics = st.sidebar.button("⚙️ Execute Strategy Core", use_container_width=True)
 
-# 3. GLOBAL CENTRALIZED DATA INGESTION ENGINE
-@st.cache_data(show_spinner="Accessing global market pipelines...")
+# 2. CACHED PIPELINE INGESTION
+@st.cache_data
 def ingest_market_records(ticker):
-    # Pulls 60 days of high-density hourly data points
     df = yf.download(ticker, period="60d", interval="1h", multi_level_index=False)
     df = df[['Close']].reset_index()
-    
-    # FIX: Standardize the timestamp column name so it works with hourly or daily formats
     df.columns = ['Date', 'Close']
-    
     return df
 
-
-# Instantly pull data
 base_data = ingest_market_records(target_ticker)
 
-# 4. PRIMARY ANALYTICS EXECUTION FLOW
+# 3. STRATEGY COMPUTATION ROUTER
 if execute_analytics:
-    df = base_data.copy()
+    working_df = base_data.copy()
     
-    # Mathematical Engine Processing
-    df['Center_Line'] = df['Close'].rolling(window=ma_window).mean()
-    df['Rolling_Std'] = df['Close'].rolling(window=ma_window).std()
-    df['Upper_Band'] = df['Center_Line'] + (df['Rolling_Std'] * dev_multiplier)
-    df['Lower_Band'] = df['Center_Line'] - (df['Rolling_Std'] * dev_multiplier)
-    df = df.dropna().reset_index(drop=True)
-    
-    # Portfolio Balance Sheets Initialization
+    # Routing logic based on user selection
+    if strategy_choice == "Bollinger Band Breakout":
+        df = run_bollinger_breakout(working_df, ma_window, dev_multiplier)
+    else:
+        df = run_rsi_momentum(working_df, rsi_window, oversold_line, overbought_line)
+        
+    # State tracking & engine simulation processing
     starting_capital = 10000.0
-    cash = starting_capital
-    shares = 0
-    trade_logs = []
-    equity_curve = []
+    df['Daily_Return_Asset'] = df['Close'].pct_change()
     
-    # Backtesting Simulation Engine Loop
+    current_position, positions = 0, []
     for idx, row in df.iterrows():
-        price = row['Close']
-        date_str = row['Date'].strftime('%Y-%m-%d')
+        if row['Buy_Signal'] == 1: current_position = 1
+        elif row['Sell_Signal'] == 1: current_position = 0
+        positions.append(current_position)
         
-        # TREND-FOLLOWING BREAKOUT BUY RULE
-        if price > row['Upper_Band'] and cash >= price:
-            shares += 1
-            cash -= price
-            trade_logs.append({"Execution Date": date_str, "Action": "🟢 QUANT BUY (Breakout)", "Execution Price": f"${price:.2f}"})
-            
-        # TREND-FOLLOWING SYSTEM LIQUIDATION RULE
-        elif price < row['Center_Line'] and shares > 0:
-            cash += (shares * price)
-            trade_logs.append({"Execution Date": date_str, "Action": "🔴 SYSTEM LIQUIDATE", "Execution Price": f"${price:.2f}"})
-            shares = 0
-            
-        # Record current accounting state for risk analysis
-        current_equity = cash + (shares * price)
-        equity_curve.append(current_equity)
-        
-    df['Portfolio_Value'] = equity_curve
+    df['Position'] = positions
+    df['Position'] = df['Position'].shift(1).fillna(0)
+    df['Strategy_Daily_Return'] = df['Daily_Return_Asset'] * df['Position']
+    df['Portfolio_Value'] = starting_capital * (1 + df['Strategy_Daily_Return']).cumprod()
     
-    # RISK CALCULATIONS (Hedge Fund Mechanics)
+    # Financial Analytics Layer
     final_equity = df['Portfolio_Value'].iloc[-1]
     strategy_return = ((final_equity - starting_capital) / starting_capital) * 100
+    market_return = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
     
-    initial_market_price = df['Close'].iloc[0]
-    final_market_price = df['Close'].iloc[-1]
-    market_return = ((final_market_price - initial_market_price) / initial_market_price) * 100
-    
-    # Max Drawdown calculation
     df['Peak'] = df['Portfolio_Value'].cummax()
     df['Drawdown'] = (df['Portfolio_Value'] - df['Peak']) / df['Peak']
     max_drawdown = df['Drawdown'].min() * 100
+    sharpe = (df['Strategy_Daily_Return'].mean() / df['Strategy_Daily_Return'].std()) * np.sqrt(252) if df['Strategy_Daily_Return'].std() != 0 else 0
     
-    # Sharpe Ratio (Approximation)
-    df['Daily_Return'] = df['Portfolio_Value'].pct_change()
-    sharpe = (df['Daily_Return'].mean() / df['Daily_Return'].std()) * np.sqrt(252) if df['Daily_Return'].std() != 0 else 0
-    
-    # 5. RENDER SYSTEM INTERFACE
-    st.success(f"Analytical pipeline processed successfully for {selected_label}.")
-    
-    # Metrics Panel
+    # UI Render Components
+    st.success(f"Successfully processed {strategy_choice} model for {selected_label}.")
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Final Valuation Assets", f"${final_equity:,.2f}")
-    m2.metric("Absolute Net Return", f"{strategy_return:.2f}%", f"{strategy_return - market_return:.2f}% Alpha")
-    m3.metric("Maximum Drawdown (Risk)", f"{max_drawdown:.2f}%")
-    m4.metric("Sharpe Ratio (Efficiency)", f"{sharpe:.2f}")
+    m1.metric("Final Balance", f"${final_equity:,.2f}")
+    m2.metric("Net Return", f"{strategy_return:.2f}%", f"{strategy_return - market_return:.2f}% vs Market")
+    m3.metric("Max Risk Drop", f"{max_drawdown:.2f}%")
+    m4.metric("Sharpe Efficiency", f"{sharpe:.2f}")
     
     st.markdown("---")
     
-    # Interactive UI View Customizations
-    view_tab1, view_tab2 = st.tabs(["📈 Market Dynamics & Indicators", "📋 Ledger Audit Controls"])
-    
-    with view_tab1:
-        st.markdown("### Asset Volatility Channels & Target Closing Profiles")
-        chart_data = df.set_index('Date')[['Close', 'Upper_Band', 'Lower_Band', 'Portfolio_Value']]
-        st.line_chart(chart_data)
-        
-    with view_tab2:
-        st.markdown("### Verified System Execution Audit Records")
-        if trade_logs:
-            st.dataframe(pd.DataFrame(trade_logs), use_container_width=True)
+    tab1, tab2 = st.tabs(["📊 Performance Charting", "📋 Signal Ledger Analytics"])
+    with tab1:
+        if strategy_choice == "Bollinger Band Breakout":
+            st.line_chart(df.set_index('Date')[['Close', 'Upper_Band', 'Lower_Band', 'Portfolio_Value']])
         else:
-            st.info("Market volatility parameters stayed within boundaries. No explicit trade signals were emitted.")
+            # For RSI view, chart the asset closing value alongside the running indicator channel
+            st.line_chart(df.set_index('Date')[['Close', 'Portfolio_Value']])
+            st.subheader("Oscillator Tracking")
+            st.line_chart(df.set_index('Date')[['RSI', 'Upper_Band', 'Lower_Band']])
+    with tab2:
+        st.dataframe(df[df['Buy_Signal'] == 1].head(10), use_container_width=True)
 else:
-    # Onboarding Splash Screen (Fights the 'AI Slop' aesthetic)
-    st.info("👈 Selection Panel Active. Choose a core asset from the sidebar control panel and click 'Run Quantitative Engine' to populate the telemetry workspace.")
-    
-    st.markdown("### 🌐 Operational Infrastructure Capabilities Verified")
-    col_a, col_b, col_c = st.columns(3)
-    col_a.markdown("#### 📡 Real-Time Data Pipeline\nConnected to Yahoo Finance web API streaming endpoints.")
-    col_b.markdown("#### 🧮 Vectorized Calculation Engines\nProcessing rolling statistical standard deviations via `pandas` and `numpy` structures.")
-    col_c.markdown("#### 🛡️ Memory State Cache Management\nEnsuring instant asset switches without redundant web data asset downloads.")
+    st.info("👈 Open the sidebar control workspace panel, select your model variant, and trigger the calculation core engine.")
