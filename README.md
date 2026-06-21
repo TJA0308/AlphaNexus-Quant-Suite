@@ -1,8 +1,8 @@
 # AlphaNexus Backtesting Lab
 
-AlphaNexus is a full-stack backtesting dashboard for learning how trading strategy research tools work. It lets a user choose a ticker, run a parameterized strategy, compare results against a buy-and-hold benchmark, and inspect risk metrics such as max drawdown, Sharpe ratio, win rate, and trade-level PnL.
+AlphaNexus is a backtesting workbench for testing simple long-only trading rules on historical market data. A user chooses a ticker, strategy, date range, starting capital, fee, and slippage assumptions; the app then compares the strategy against buy-and-hold and reports risk and trade-level results.
 
-This project is intentionally scoped for internship interviews: the strategies are simple enough to explain, but the architecture shows real software engineering concerns such as API design, reusable analytics modules, testing, frontend state, error handling, and deployment readiness.
+The project is built to be explainable: the strategies are intentionally simple, while the codebase separates data loading, indicators, signal generation, portfolio simulation, metrics, API responses, and UI rendering.
 
 ## What It Demonstrates
 
@@ -14,6 +14,22 @@ This project is intentionally scoped for internship interviews: the strategies a
 - Portfolio simulation with cash, shares, transaction fees, slippage, and benchmark comparison
 - Risk metrics including total return, Sharpe ratio, max drawdown, win rate, and completed trade count
 - Unit tests for indicators and backtest behavior
+
+## Live Demo
+
+The Streamlit version is the recommended public demo because it runs from a single entry point:
+
+```text
+app.py
+```
+
+Streamlit Community Cloud settings:
+
+```text
+Repository: TJA0308/AlphaNexus-Quant-Suite
+Branch: main
+Main file path: app.py
+```
 
 ## Project Structure
 
@@ -35,6 +51,8 @@ This project is intentionally scoped for internship interviews: the strategies a
 `-- pyproject.toml
 ```
 
+For a more detailed explanation, see [docs/architecture.md](docs/architecture.md).
+
 ## How The Backtest Works
 
 1. Load historical OHLCV data for a ticker.
@@ -45,6 +63,15 @@ This project is intentionally scoped for internship interviews: the strategies a
 6. Calculate return, drawdown, Sharpe ratio, win rate, and trade-level realized PnL.
 
 The app is a research and education tool. It is not financial advice and it does not predict future returns.
+
+## Assumptions And Limits
+
+- The simulator is long-only: it holds cash or one long position.
+- Signals are generated from historical close prices.
+- Fees and slippage are applied on executed trades.
+- The benchmark is buy-and-hold over the same selected period.
+- The strategies are intentionally simple and should not be treated as production trading models.
+- Results can change when market data providers revise historical data.
 
 ## Local Setup
 
@@ -103,8 +130,6 @@ Current test coverage focuses on:
 
 ## Interview Explanation
 
-Use this explanation:
-
 > I built a backtesting dashboard to learn how analytics products are structured end to end. The backend fetches market data, computes indicators, generates trading signals, simulates a portfolio with fees and slippage, and returns risk metrics through a FastAPI endpoint. The frontend lets a user configure a strategy and inspect the equity curve, drawdown, benchmark comparison, and trade ledger.
 
 ## Resume Bullet
@@ -114,9 +139,7 @@ Use this explanation:
 ## Next Improvements
 
 - Add saved backtest history with SQLite or DuckDB.
-- Add exports for trade ledger CSV and summary reports.
 - Add walk-forward testing to reduce overfitting.
 - Add portfolio-level multi-asset allocation.
 - Add Playwright tests for the Next.js user flow.
-- Add Dockerfiles and GitHub Actions CI.
-
+- Add Dockerfiles for consistent deployment.
