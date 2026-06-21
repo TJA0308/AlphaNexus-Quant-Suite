@@ -42,6 +42,7 @@ Live demo: pending
 - Inspect executed trades and realized PnL
 - Export trade ledger, equity curve, summary metrics, and recent run history as CSV
 - Use either a Streamlit demo UI or a FastAPI + Next.js full-stack path
+- Use Radix UI primitives and Recharts in the Next.js dashboard
 - Run automated Python tests and frontend builds through GitHub Actions
 
 ## Tech Stack
@@ -52,7 +53,7 @@ Live demo: pending
 | Data | yfinance |
 | API | FastAPI, Pydantic |
 | Demo UI | Streamlit, Plotly |
-| Frontend scaffold | Next.js, TypeScript |
+| Frontend scaffold | Next.js, TypeScript, Radix UI, Recharts |
 | Testing | pytest, GitHub Actions |
 
 ## Architecture
