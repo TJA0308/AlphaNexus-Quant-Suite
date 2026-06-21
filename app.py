@@ -27,6 +27,28 @@ STRATEGY_LABELS = {
     "Bollinger Breakout": "bollinger_breakout",
 }
 
+DEFAULT_START_DATE = date.today() - timedelta(days=365)
+DEFAULT_END_DATE = date.today()
+
+DEFAULT_WIDGETS = {
+    "asset_choice": "Apple",
+    "strategy_choice": "SMA Crossover",
+    "interval_choice": "1d",
+    "start_date": DEFAULT_START_DATE,
+    "end_date": DEFAULT_END_DATE,
+    "starting_cash": 10_000,
+    "fee_bps": 5,
+    "slippage_bps": 5,
+    "allocation_pct": 100,
+    "fast_window": 20,
+    "slow_window": 50,
+    "rsi_window": 14,
+    "oversold": 30,
+    "overbought": 70,
+    "band_window": 20,
+    "band_std": 2.0,
+}
+
 
 st.set_page_config(page_title="Strategy Backtest Workbench", layout="wide")
 apply_custom_theme()
@@ -35,6 +57,9 @@ if "last_run" not in st.session_state:
     st.session_state.last_run = None
 if "run_history" not in st.session_state:
     st.session_state.run_history = []
+for key, value in DEFAULT_WIDGETS.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 @st.cache_data(ttl=900)
@@ -100,10 +125,15 @@ def build_equity_chart(result: pd.DataFrame) -> go.Figure:
         )
     )
     fig.update_layout(
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        font={"color": "#17202a"},
         height=430,
         margin={"l": 10, "r": 10, "t": 20, "b": 10},
         legend={"orientation": "h", "y": 1.05},
         yaxis_title="Portfolio value",
+        xaxis={"gridcolor": "#e4e8ef", "zerolinecolor": "#e4e8ef"},
+        yaxis={"gridcolor": "#e4e8ef", "zerolinecolor": "#e4e8ef"},
     )
     return fig
 
@@ -121,10 +151,15 @@ def build_drawdown_chart(result: pd.DataFrame) -> go.Figure:
         )
     )
     fig.update_layout(
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        font={"color": "#17202a"},
         height=260,
         margin={"l": 10, "r": 10, "t": 20, "b": 10},
         yaxis_title="Drawdown %",
         showlegend=False,
+        xaxis={"gridcolor": "#e4e8ef", "zerolinecolor": "#e4e8ef"},
+        yaxis={"gridcolor": "#e4e8ef", "zerolinecolor": "#e4e8ef"},
     )
     return fig
 
@@ -162,49 +197,70 @@ def build_price_chart(result: pd.DataFrame) -> go.Figure:
         )
     )
     fig.update_layout(
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#ffffff",
+        font={"color": "#17202a"},
         height=360,
         margin={"l": 10, "r": 10, "t": 20, "b": 10},
         legend={"orientation": "h", "y": 1.05},
         yaxis_title="Close price",
+        xaxis={"gridcolor": "#e4e8ef", "zerolinecolor": "#e4e8ef"},
+        yaxis={"gridcolor": "#e4e8ef", "zerolinecolor": "#e4e8ef"},
     )
     return fig
 
 
-st.title("Strategy Backtest Workbench")
-st.caption("Test simple long-only trading rules against buy-and-hold using historical market data.")
+st.markdown(
+    """
+    <section class="hero-panel">
+        <div>
+            <p class="eyebrow">Market research tool</p>
+            <h1>Strategy Backtest Workbench</h1>
+            <p class="hero-copy">Test simple long-only trading rules, compare them against buy-and-hold, and inspect the assumptions behind the result.</p>
+        </div>
+        <div class="hero-facts">
+            <span>Fees</span>
+            <span>Slippage</span>
+            <span>Benchmark</span>
+            <span>Trade ledger</span>
+        </div>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
 
 with st.sidebar:
-    st.header("Inputs")
-    selected_asset = st.selectbox("Asset", list(ASSET_POOL.keys()))
+    st.header("Backtest controls")
+    st.caption("Start with the preset, then change one input at a time.")
+    if st.button("Load demo preset", use_container_width=True):
+        for key, value in DEFAULT_WIDGETS.items():
+            st.session_state[key] = value
+        st.session_state.last_run = None
+        st.rerun()
+
+    st.markdown("### Market")
+    selected_asset = st.selectbox("Asset", list(ASSET_POOL.keys()), key="asset_choice")
     ticker = ASSET_POOL[selected_asset]
-    strategy_label = st.selectbox("Strategy", list(STRATEGY_LABELS.keys()))
+    interval = st.selectbox("Interval", ["1d", "1h"], key="interval_choice")
+    start_date = st.date_input("Start date", key="start_date")
+    end_date = st.date_input("End date", key="end_date")
+
+    st.markdown("### Strategy")
+    strategy_label = st.selectbox("Strategy", list(STRATEGY_LABELS.keys()), key="strategy_choice")
     strategy_name = STRATEGY_LABELS[strategy_label]
 
-    st.divider()
-    interval = st.selectbox("Interval", ["1d", "1h"], index=0)
-    default_start = date.today() - timedelta(days=365)
-    start_date = st.date_input("Start date", value=default_start)
-    end_date = st.date_input("End date", value=date.today())
-
-    st.divider()
-    starting_cash = st.number_input("Starting cash", min_value=1000, value=10000, step=1000)
-    fee_bps = st.slider("Fee, basis points", 0, 50, 5)
-    slippage_bps = st.slider("Slippage, basis points", 0, 50, 5)
-    allocation = st.slider("Capital allocation", 10, 100, 100) / 100
-
-    st.divider()
     if strategy_name == "sma_crossover":
-        fast_window = st.slider("Fast SMA window", 5, 50, 20)
-        slow_window = st.slider("Slow SMA window", 20, 200, 50)
+        fast_window = st.slider("Fast SMA window", 5, 50, key="fast_window")
+        slow_window = st.slider("Slow SMA window", 20, 200, key="slow_window")
         strategy_config = StrategyConfig(
             name="sma_crossover",
             fast_window=fast_window,
             slow_window=slow_window,
         )
     elif strategy_name == "rsi_mean_reversion":
-        rsi_window = st.slider("RSI window", 5, 40, 14)
-        oversold = st.slider("Oversold threshold", 10, 45, 30)
-        overbought = st.slider("Overbought threshold", 55, 90, 70)
+        rsi_window = st.slider("RSI window", 5, 40, key="rsi_window")
+        oversold = st.slider("Oversold threshold", 10, 45, key="oversold")
+        overbought = st.slider("Overbought threshold", 55, 90, key="overbought")
         strategy_config = StrategyConfig(
             name="rsi_mean_reversion",
             rsi_window=rsi_window,
@@ -212,13 +268,21 @@ with st.sidebar:
             overbought=overbought,
         )
     else:
-        band_window = st.slider("Band window", 10, 80, 20)
-        band_std = st.slider("Band width", 0.5, 3.0, 2.0, 0.1)
+        band_window = st.slider("Band window", 10, 80, key="band_window")
+        band_std = st.slider("Band width", 0.5, 3.0, key="band_std")
         strategy_config = StrategyConfig(
             name="bollinger_breakout",
             band_window=band_window,
             band_std=band_std,
         )
+
+    st.markdown("### Portfolio")
+    starting_cash = st.number_input("Starting cash", min_value=1000, step=1000, key="starting_cash")
+    allocation = st.slider("Capital allocation", 10, 100, key="allocation_pct") / 100
+
+    st.markdown("### Costs")
+    fee_bps = st.slider("Fee, basis points", 0, 50, key="fee_bps")
+    slippage_bps = st.slider("Slippage, basis points", 0, 50, key="slippage_bps")
 
     run_clicked = st.button("Run backtest", type="primary", use_container_width=True)
 
@@ -269,31 +333,35 @@ elif run_clicked:
 last_run = st.session_state.last_run
 
 if last_run is None:
-    left, right = st.columns([1.3, 1])
-    with left:
-        st.subheader("What this app does")
-        st.markdown(
-            """
-            This workbench turns a market-data question into a reproducible backtest:
+    st.markdown(
+        """
+        <div class="empty-state">
+            <div>
+                <p class="eyebrow">Ready to run</p>
+                <h2>Start with the AAPL demo preset.</h2>
+                <p>The default setup runs a one-year SMA crossover backtest with fees, slippage, benchmark comparison, and downloadable results.</p>
+            </div>
+            <div class="mini-flow">
+                <span>1. Choose inputs</span>
+                <span>2. Run backtest</span>
+                <span>3. Review risk</span>
+                <span>4. Export evidence</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-            1. Load historical OHLCV data for a ticker.
-            2. Generate strategy signals from simple indicators.
-            3. Simulate trades with cash, shares, fees, and slippage.
-            4. Compare the equity curve against buy-and-hold.
-            5. Report risk and trade-level results.
-            """
-        )
-    with right:
-        st.subheader("Current setup")
-        for label, value in current_assumptions.items():
-            st.markdown(f"**{label}:** {value}")
-        st.info("Run the default setup to see the full report, then change one input at a time.")
+    st.markdown("### Current setup")
+    setup_cols = st.columns(4)
+    for index, (label, value) in enumerate(current_assumptions.items()):
+        setup_cols[index % 4].markdown(f"**{label}**  \n{value}")
 
-    st.markdown("### Why these assumptions matter")
+    st.markdown("### Assumptions")
     c1, c2, c3 = st.columns(3)
-    c1.markdown("**No shorting**  \nThe simulator only holds cash or a long position.")
-    c2.markdown("**Close-price execution**  \nSignals are evaluated on the close price in the downloaded data.")
-    c3.markdown("**Costs included**  \nFees and slippage are deducted so results are not frictionless.")
+    c1.markdown("**Long-only**  \nThe simulator holds cash or one long position.")
+    c2.markdown("**Close-price signals**  \nSignals use the downloaded close price.")
+    c3.markdown("**Costs included**  \nFees and slippage are deducted on executed trades.")
 else:
     result = last_run["result"]
     metrics = last_run["metrics"]
@@ -311,34 +379,34 @@ else:
     metric_cols[4].metric("Sharpe", f"{metrics['sharpe_ratio']:.2f}")
     metric_cols[5].metric("Win rate", format_percent(metrics["win_rate"]))
 
+    alpha = metrics["total_return"] - metrics["benchmark_return"]
+    verdict = "outperformed" if alpha > 0 else "underperformed"
+    st.markdown(
+        f"""
+        <div class="result-summary">
+            <strong>{ticker} / {strategy_label}</strong>
+            <span>The strategy {verdict} buy-and-hold by {format_percent(abs(alpha))} over this period.</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.markdown(
         f"""
         <div class="assumption-bar">
             <span>{ticker}</span>
             <span>{strategy_label}</span>
-            <span>{interval} bars</span>
-            <span>{fee_bps} bps fee</span>
-            <span>{slippage_bps} bps slippage</span>
+            <span>{assumptions["Interval"]} bars</span>
+            <span>{assumptions["Fee"]}</span>
+            <span>{assumptions["Slippage"]}</span>
             <span>{metrics['trade_count']} completed trades</span>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    with st.expander("Assumptions and interpretation", expanded=True):
-        left, right = st.columns([1, 1])
-        with left:
-            st.markdown("**Strategy rule**")
-            st.write(format_strategy_summary(strategy_name, strategy_config))
-            st.markdown("**Execution model**")
-            st.write("Long-only portfolio. The simulator moves between cash and one position, applying fee and slippage assumptions on executed trades.")
-        with right:
-            for label, value in assumptions.items():
-                st.markdown(f"**{label}:** {value}")
-            st.caption("This is a research tool, not a prediction model or trading recommendation.")
-
-    tab_overview, tab_trades, tab_data, tab_export = st.tabs(["Overview", "Trades", "Data", "Export"])
-    with tab_overview:
+    tab_performance, tab_trades, tab_assumptions, tab_export = st.tabs(["Performance", "Trades", "Assumptions", "Exports"])
+    with tab_performance:
         st.plotly_chart(build_equity_chart(result), use_container_width=True)
         left, right = st.columns([2, 1])
         with left:
@@ -366,8 +434,21 @@ else:
         else:
             st.dataframe(display_trades, use_container_width=True, hide_index=True)
 
-    with tab_data:
-        st.dataframe(result.tail(250), use_container_width=True, hide_index=True)
+    with tab_assumptions:
+        left, right = st.columns([1, 1])
+        with left:
+            st.subheader("Strategy rule")
+            st.write(format_strategy_summary(strategy_name, strategy_config))
+            st.subheader("Execution model")
+            st.write("Long-only portfolio. The simulator moves between cash and one position, applying fee and slippage assumptions on executed trades.")
+            st.caption("This is a research tool, not a prediction model or trading recommendation.")
+        with right:
+            st.subheader("Model assumptions")
+            for label, value in assumptions.items():
+                st.markdown(f"**{label}:** {value}")
+            st.caption("The benchmark is buy-and-hold over the same selected period.")
+        st.subheader("Recent data")
+        st.dataframe(result.tail(100), use_container_width=True, hide_index=True)
 
     with tab_export:
         st.write("Download the results for review, documentation, or further analysis.")
