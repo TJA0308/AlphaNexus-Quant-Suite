@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 import pandas as pd
 import plotly.graph_objects as go
@@ -33,6 +33,8 @@ apply_custom_theme()
 
 if "last_run" not in st.session_state:
     st.session_state.last_run = None
+if "run_history" not in st.session_state:
+    st.session_state.run_history = []
 
 
 @st.cache_data(ttl=900)
@@ -55,6 +57,26 @@ def format_strategy_summary(strategy_name: str, config: StrategyConfig) -> str:
 def metrics_to_csv(metrics: dict[str, float | int]) -> bytes:
     summary = pd.DataFrame([metrics])
     return summary.to_csv(index=False).encode("utf-8")
+
+
+def build_history_row(
+    ticker: str,
+    strategy_label: str,
+    start_date: date,
+    end_date: date,
+    metrics: dict[str, float | int],
+) -> dict[str, str | float | int]:
+    return {
+        "Run time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "Ticker": ticker,
+        "Strategy": strategy_label,
+        "Period": f"{start_date} to {end_date}",
+        "Return": float(metrics["total_return"]),
+        "Benchmark": float(metrics["benchmark_return"]),
+        "Max drawdown": float(metrics["max_drawdown"]),
+        "Sharpe": float(metrics["sharpe_ratio"]),
+        "Trades": int(metrics["trade_count"]),
+    }
 
 
 def build_equity_chart(result: pd.DataFrame) -> go.Figure:
@@ -236,6 +258,10 @@ elif run_clicked:
             "metrics": metrics,
             "assumptions": current_assumptions,
         }
+        st.session_state.run_history = [
+            build_history_row(ticker, strategy_label, start_date, end_date, metrics),
+            *st.session_state.run_history,
+        ][:8]
     except Exception as exc:
         st.error(f"Could not run backtest: {exc}")
         st.stop()
@@ -320,6 +346,15 @@ else:
         with right:
             st.plotly_chart(build_drawdown_chart(result), use_container_width=True)
 
+        if st.session_state.run_history:
+            st.subheader("Recent runs")
+            history = pd.DataFrame(st.session_state.run_history)
+            display_history = history.copy()
+            for column in ["Return", "Benchmark", "Max drawdown"]:
+                display_history[column] = display_history[column].map(format_percent)
+            display_history["Sharpe"] = display_history["Sharpe"].map(lambda value: f"{value:.2f}")
+            st.dataframe(display_history, use_container_width=True, hide_index=True)
+
     with tab_trades:
         trades = result[result["trade_signal"] != 0][
             ["date", "close", "trade_signal", "shares", "cash", "portfolio_value", "realized_pnl"]
@@ -358,3 +393,11 @@ else:
             mime="text/csv",
             use_container_width=True,
         )
+        if st.session_state.run_history:
+            st.download_button(
+                "Download run history",
+                data=pd.DataFrame(st.session_state.run_history).to_csv(index=False).encode("utf-8"),
+                file_name="backtest_run_history.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
