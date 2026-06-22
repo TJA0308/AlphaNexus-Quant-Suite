@@ -51,6 +51,12 @@ ALLOWED_ORIGINS=https://your-vercel-app.vercel.app,http://localhost:3000,http://
 
 Before the Vercel URL exists, keep local origins or temporarily add the expected preview URL.
 
+The backend also supports Vercel preview and production deployments through:
+
+```text
+ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
+```
+
 ### Frontend On Vercel
 
 Import the same GitHub repo into Vercel and set the project root to:
@@ -121,6 +127,12 @@ ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
 ```
 
 Multiple origins must be comma-separated.
+
+For Vercel preview URLs, keep this regex enabled in Render:
+
+```text
+ALLOWED_ORIGIN_REGEX=https://.*\.vercel\.app
+```
 
 ### Empty Or Slow Data Response
 

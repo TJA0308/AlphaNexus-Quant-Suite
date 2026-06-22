@@ -18,6 +18,10 @@ def allowed_origins() -> list[str]:
     return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 
 
+def allowed_origin_regex() -> str:
+    return os.getenv("ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.app")
+
+
 class BacktestRequest(BaseModel):
     ticker: str = Field(default="AAPL", min_length=1, max_length=20)
     start: date
@@ -54,7 +58,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins(),
-    allow_credentials=True,
+    allow_origin_regex=allowed_origin_regex(),
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
