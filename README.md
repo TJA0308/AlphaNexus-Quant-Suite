@@ -8,18 +8,30 @@ Full-stack strategy backtesting workbench for comparing simple trading rules aga
 [![API Docs](https://img.shields.io/badge/API_Docs-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://alphanexus-api.onrender.com/docs)
 [![CI](https://img.shields.io/github/actions/workflow/status/TJA0308/AlphaNexus/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml)
 
-![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white)
+<p><strong>Frontend</strong></p>
+
 ![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?style=flat-square&logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Radix UI](https://img.shields.io/badge/Radix_UI-Primitives-161618?style=flat-square&logo=radixui&logoColor=white)
 ![Recharts](https://img.shields.io/badge/Recharts-Charts-22c55e?style=flat-square)
-![Streamlit](https://img.shields.io/badge/Streamlit-Demo-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
-![pandas](https://img.shields.io/badge/pandas-Analytics-150458?style=flat-square&logo=pandas&logoColor=white)
+
+<p><strong>Backend & Analytics</strong></p>
+
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-Validation-E92063?style=flat-square&logo=pydantic&logoColor=white)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-499848?style=flat-square)
+![pandas](https://img.shields.io/badge/pandas-Time_Series-150458?style=flat-square&logo=pandas&logoColor=white)
 ![NumPy](https://img.shields.io/badge/NumPy-Numerics-013243?style=flat-square&logo=numpy&logoColor=white)
+![yfinance](https://img.shields.io/badge/yfinance-Market_Data-2563EB?style=flat-square)
+
+<p><strong>Demo, Testing & Deployment</strong></p>
+
+![Streamlit](https://img.shields.io/badge/Streamlit-Demo-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
 ![pytest](https://img.shields.io/badge/pytest-Tested-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
-![Render](https://img.shields.io/badge/Render-API_Host-46E3B7?style=flat-square&logo=render&logoColor=black)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?style=flat-square&logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Render-API_Host-46E3B7?style=flat-square&logo=render&logoColor=black)
 
 </div>
 
