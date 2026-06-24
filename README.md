@@ -64,7 +64,8 @@ The goal is not to build a black-box trading bot. The goal is to make backtestin
 | Charts | Recharts equity curve and drawdown visualization |
 | Exports | Trade ledger and equity curve CSV downloads |
 | API | FastAPI endpoints for health, strategy metadata, and backtest execution |
-| Testing | pytest coverage for indicators and backtest behavior, plus CI frontend build |
+| Testing | pytest coverage for indicators, backtest behavior, and 72-scenario benchmark regression |
+| Benchmarks | Deterministic cached-fixture benchmark with median and p95 engine runtime |
 
 ## Product Flow
 
@@ -105,6 +106,7 @@ Market data
 |   `-- main.py           # FastAPI app
 |-- frontend/
 |   `-- app/              # Next.js App Router dashboard
+|-- benchmarks/           # Deterministic fixture benchmark suite
 |-- tests/                # pytest coverage for core logic
 |-- docs/                 # architecture and deployment notes
 |-- app.py                # Streamlit backup demo
@@ -242,6 +244,25 @@ cmd /c npm --prefix frontend run build
 
 CI runs both checks on pushes and pull requests to `main`.
 
+## Benchmarking
+
+Run the deterministic backtest benchmark:
+
+```bash
+python benchmarks/run_backtest_benchmark.py
+```
+
+Example local result:
+
+```text
+Scenarios passed: 72/72 (100.0%)
+Fixture rows processed: 24,120
+Median engine runtime: 13.71 ms
+P95 engine runtime: 20.85 ms
+```
+
+The benchmark uses cached synthetic OHLCV fixtures instead of live `yfinance` downloads, so it measures the simulation engine rather than network or provider latency. Local timing can vary between runs, so the CI guard enforces a conservative `100 ms` p95 threshold. See [benchmarks/README.md](benchmarks/README.md) and [docs/project-defense.md](docs/project-defense.md).
+
 ## What This Demonstrates
 
 <details>
@@ -250,6 +271,7 @@ CI runs both checks on pushes and pull requests to `main`.
 - Modular backend package design
 - Typed FastAPI request/response models
 - Frontend/backend separation
+- Deterministic benchmark and regression suite
 - Deployment configuration for Render and Vercel
 - CI checks for Python tests and frontend builds
 
@@ -282,7 +304,7 @@ CI runs both checks on pushes and pull requests to `main`.
 
 ## Resume Bullet
 
-> Built and deployed a full-stack financial backtesting dashboard using Python, FastAPI, pandas, NumPy, Next.js, TypeScript, Radix UI, and Recharts to test parameterized trading strategies, compare against buy-and-hold benchmarks, and analyze Sharpe ratio, max drawdown, win rate, and trade-level PnL.
+> Built a full-stack backtesting platform that validates 72 reproducible strategy scenarios with 100% pass rate and <25 ms p95 engine runtime locally, by creating cached OHLCV fixtures, a benchmark scenario matrix, and regression tests around a Python/FastAPI analytics engine.
 
 ## Roadmap
 

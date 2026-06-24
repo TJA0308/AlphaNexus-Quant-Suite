@@ -26,6 +26,9 @@ jobs:
       - name: Run Python tests
         run: pytest
 
+      - name: Run deterministic backtest benchmark
+        run: python benchmarks/run_backtest_benchmark.py --fail-on-p95-ms 100
+
   frontend:
     runs-on: ubuntu-latest
     steps:
