@@ -35,6 +35,25 @@ def test_backtest_generates_metrics_and_never_loses_cash_to_negative_fee_bug():
     assert "sharpe_ratio" in metrics
 
 
+def test_signals_are_lagged_to_avoid_lookahead_bias():
+    # The fast SMA (window 2) first rises above the slow SMA (window 5) on the
+    # bar where price jumps to 11. Without lagging, the buy would execute on
+    # that same bar's close. With the one-bar lag it must execute on the
+    # *following* bar instead, proving we never trade on a close we just saw.
+    from alphanexus.strategies import StrategyConfig, generate_signals
+
+    signals = generate_signals(
+        sample_prices(),
+        StrategyConfig(name="sma_crossover", fast_window=2, slow_window=5),
+    )
+
+    # Find the first bar whose own SMAs cross long, then confirm the buy
+    # (trade_signal == 1) lands on the next bar, not that one.
+    crossover_bar = (signals["fast_sma"] > signals["slow_sma"]).idxmax()
+    assert signals.loc[crossover_bar, "trade_signal"] == 0
+    assert signals.loc[crossover_bar + 1, "trade_signal"] == 1
+
+
 def test_backtest_records_executed_trades_only_when_position_changes():
     result, _ = run_backtest(
         sample_prices(),
