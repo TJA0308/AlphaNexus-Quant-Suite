@@ -64,6 +64,12 @@ def generate_signals(prices: pd.DataFrame, config: StrategyConfig) -> pd.DataFra
     else:
         raise ValueError(f"unsupported strategy: {config.name}")
 
+    # Lag the target position by one bar before turning it into trades.
+    # `signal` for bar t is derived from bar t's close, but we cannot both
+    # observe that close and trade on it. Shifting by one bar means a signal
+    # seen at bar t is acted on at bar t+1, which removes the look-ahead bias.
+    df["signal"] = df["signal"].shift(1).fillna(0).astype(int)
+
     df["trade_signal"] = df["signal"].diff().fillna(df["signal"]).astype(int)
     return df
 
