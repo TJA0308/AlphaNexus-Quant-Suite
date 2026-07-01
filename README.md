@@ -127,7 +127,7 @@ Market data
 | Data source | yfinance |
 | Backup demo | Streamlit, Plotly |
 | Testing | pytest, GitHub Actions |
-| Deployment | Vercel frontend, Render backend |
+| Deployment | Docker, Vercel frontend, Render backend |
 
 ## Backtest Method
 
@@ -231,6 +231,15 @@ Optional Streamlit demo:
 streamlit run app.py
 ```
 
+Run the API in Docker:
+
+```bash
+docker build -t alphanexus-api .
+docker run -p 8000:8000 alphanexus-api
+```
+
+The container serves the FastAPI backend on port 8000; the Next.js frontend deploys separately on Vercel.
+
 ## Testing
 
 Run backend tests:
@@ -315,7 +324,6 @@ The benchmark uses cached synthetic OHLCV fixtures instead of live `yfinance` do
 - Add walk-forward testing to reduce overfitting.
 - Add multi-asset portfolio allocation.
 - Add Playwright tests for the deployed frontend flow.
-- Add Dockerfiles for consistent local and cloud deployment.
 
 ## Disclaimer
 
