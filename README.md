@@ -33,6 +33,10 @@ Full-stack strategy backtesting workbench for comparing simple trading rules aga
 ![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?style=flat-square&logo=vercel&logoColor=white)
 ![Render](https://img.shields.io/badge/Render-API_Host-46E3B7?style=flat-square&logo=render&logoColor=black)
 
+<br />
+
+<img src="docs/dashboard.jpeg" alt="AlphaNexus performance dashboard showing metric cards, equity curve, and drawdown chart" width="900" />
+
 </div>
 
 ## Overview
