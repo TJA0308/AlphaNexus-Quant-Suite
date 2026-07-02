@@ -1,182 +1,123 @@
-<div align="center">
-
 # AlphaNexus
 
-Full-stack strategy backtesting workbench for comparing simple trading rules against buy-and-hold benchmarks.
+AlphaNexus is a full-stack backtesting workbench for comparing simple, explainable trading rules with buy-and-hold.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-000000?style=for-the-badge&logo=vercel)](https://alpha-nexus-mbbqka99o-tja0308s-projects.vercel.app/)
-[![API Docs](https://img.shields.io/badge/API_Docs-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://alphanexus-api.onrender.com/docs)
-[![CI](https://img.shields.io/github/actions/workflow/status/TJA0308/AlphaNexus/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml)
+[Live dashboard](https://alpha-nexus-mbbqka99o-tja0308s-projects.vercel.app/) · [API documentation](https://alphanexus-api.onrender.com/docs) · [Deployment notes](docs/deployment.md) · [![CI](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml/badge.svg)](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml)
 
-<p><strong>Frontend</strong></p>
+![AlphaNexus dashboard showing performance metrics, an equity curve, and drawdown](docs/dashboard.jpeg)
 
-![Next.js](https://img.shields.io/badge/Next.js-App_Router-000000?style=flat-square&logo=nextdotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Radix UI](https://img.shields.io/badge/Radix_UI-Primitives-161618?style=flat-square&logo=radixui&logoColor=white)
-![Recharts](https://img.shields.io/badge/Recharts-Charts-22c55e?style=flat-square)
+## Why I built it
 
-<p><strong>Backend & Analytics</strong></p>
+I wanted to understand what happens between a trading idea and the performance number shown at the end of a backtest. A notebook can calculate a return quickly, but it can also hide important details: when a signal becomes tradable, how transaction costs are applied, what happens to cash and shares, and whether the comparison with buy-and-hold is fair.
 
-![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat-square&logo=fastapi&logoColor=white)
-![Pydantic](https://img.shields.io/badge/Pydantic-Validation-E92063?style=flat-square&logo=pydantic&logoColor=white)
-![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-499848?style=flat-square)
-![pandas](https://img.shields.io/badge/pandas-Time_Series-150458?style=flat-square&logo=pandas&logoColor=white)
-![NumPy](https://img.shields.io/badge/NumPy-Numerics-013243?style=flat-square&logo=numpy&logoColor=white)
-![yfinance](https://img.shields.io/badge/yfinance-Market_Data-2563EB?style=flat-square)
+I built AlphaNexus to make that pipeline inspectable. Market-data loading, indicators, signal generation, portfolio simulation, metrics, API serialization, and frontend rendering live in separate layers. The application is intentionally small enough that I can explain and test each one.
 
-<p><strong>Demo, Testing & Deployment</strong></p>
+This is a research and education tool, not a trading system or a claim that these strategies generate alpha.
 
-![Streamlit](https://img.shields.io/badge/Streamlit-Demo-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)
-![pytest](https://img.shields.io/badge/pytest-Tested-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI-2088FF?style=flat-square&logo=githubactions&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?style=flat-square&logo=vercel&logoColor=white)
-![Render](https://img.shields.io/badge/Render-API_Host-46E3B7?style=flat-square&logo=render&logoColor=black)
+## What it does
 
-<br />
+- Downloads historical OHLCV data with `yfinance`.
+- Runs SMA crossover, RSI mean-reversion, and Bollinger breakout strategies.
+- Simulates a long-only portfolio with configurable fees, slippage, and starting capital.
+- Compares the strategy with buy-and-hold over the same period.
+- Reports return, Sharpe ratio, drawdown, trade count, win rate, and ending equity.
+- Displays equity, drawdown, assumptions, and executed trades in a Next.js dashboard.
+- Exports the full equity curve and trade ledger as CSV.
+- Stores completed run summaries in SQLite.
 
-<img src="docs/dashboard.jpeg" alt="AlphaNexus performance dashboard showing metric cards, equity curve, and drawdown chart" width="900" />
-
-</div>
-
-## Overview
-
-AlphaNexus is a financial analytics application that lets a user configure a ticker, date range, strategy, starting capital, fees, and slippage, then runs a Python backtest and returns an interactive performance dashboard.
-
-The goal is not to build a black-box trading bot. The goal is to make backtesting explainable: data loading, indicators, strategy signals, portfolio simulation, risk metrics, API responses, and frontend rendering are separated into clear layers.
-
-## Live Links
-
-| Surface | URL | Purpose |
-| --- | --- | --- |
-| Full-stack app | [Vercel deployment](https://alpha-nexus-mbbqka99o-tja0308s-projects.vercel.app/) | Main Next.js dashboard |
-| API docs | [FastAPI Swagger docs](https://alphanexus-api.onrender.com/docs) | Test backend endpoints |
-| API health | [Render health check](https://alphanexus-api.onrender.com/health) | Confirm backend is awake |
-| Deployment notes | [docs/deployment.md](docs/deployment.md) | Render + Vercel setup |
-| Architecture notes | [docs/architecture.md](docs/architecture.md) | Backend and analytics design |
-
-## Features
-
-| Area | Capability |
-| --- | --- |
-| Market data | Downloads historical OHLCV records with `yfinance` |
-| Strategies | SMA crossover, RSI mean reversion, Bollinger breakout |
-| Portfolio simulation | Tracks cash, shares, fees, slippage, realized PnL, and equity curve |
-| Benchmarking | Compares strategy performance against buy-and-hold |
-| Risk metrics | Total return, benchmark return, max drawdown, Sharpe ratio, win rate, trade count |
-| UI controls | Radix dual-range SMA slider, numeric cost inputs, semantic tabs, config badges |
-| Charts | Recharts equity curve and drawdown visualization |
-| Exports | Trade ledger and equity curve CSV downloads |
-| API | FastAPI endpoints for health, strategy metadata, backtest execution, and run history |
-| Persistence | Saves each backtest summary to SQLite and serves it back through a run-history endpoint |
-| Testing | pytest coverage for indicators, backtest behavior, and 72-scenario benchmark regression |
-| Benchmarks | Deterministic cached-fixture benchmark with median and p95 engine runtime |
-
-## Product Flow
+## How a backtest moves through the system
 
 ```mermaid
 flowchart LR
-    A[User selects ticker, dates, strategy] --> B[Next.js dashboard]
-    B --> C[POST /backtests]
-    C --> D[FastAPI backend]
-    D --> E[yfinance market data]
-    E --> F[Indicators and strategy signals]
-    F --> G[Portfolio simulation]
-    G --> H[Risk metrics and trade ledger]
-    H --> I[Recharts dashboard and CSV exports]
+    A[OHLCV data] --> B[Normalize columns]
+    B --> C[Calculate indicators]
+    C --> D[Generate target position]
+    D --> E[Lag signal one bar]
+    E --> F[Simulate cash and shares]
+    F --> G[Calculate metrics]
+    G --> H[FastAPI response]
+    H --> I[Next.js dashboard]
 ```
 
-## Architecture
+The analytics code does not depend on either UI. The same engine is used by the FastAPI/Next.js application and the optional Streamlit interface.
 
-```text
-Market data
-  -> normalization
-  -> indicators
-  -> strategy signals
-  -> portfolio simulation
-  -> metrics
-  -> FastAPI response
-  -> Next.js dashboard
-```
+## Decisions that matter
 
-```text
-.
-|-- alphanexus/
-|   |-- backtest.py       # Portfolio simulation engine
-|   |-- data.py           # Market data loading and normalization
-|   |-- indicators.py     # SMA, RSI, Bollinger Bands
-|   |-- metrics.py        # Sharpe, drawdown, performance summary
-|   `-- strategies.py     # Strategy signal generation
-|-- api/
-|   `-- main.py           # FastAPI app
-|-- frontend/
-|   `-- app/              # Next.js App Router dashboard
-|-- benchmarks/           # Deterministic fixture benchmark suite
-|-- tests/                # pytest coverage for core logic
-|-- docs/                 # architecture and deployment notes
-|-- app.py                # Streamlit backup demo
-|-- render.yaml           # Render backend config
-|-- requirements.txt
-`-- pyproject.toml
-```
+### Signals execute one bar later
 
-## Tech Stack
+An indicator calculated from bar `t`'s close cannot also trade at that same close. Strategy targets are shifted by one bar before trades are generated, so information observed at `t` is acted on at `t+1`.
 
-| Layer | Tools |
-| --- | --- |
-| Frontend | Next.js App Router, TypeScript, Radix UI, Recharts |
-| Backend API | FastAPI, Pydantic, Uvicorn |
-| Analytics | Python, pandas, NumPy |
-| Persistence | SQLite (run history) |
-| Data source | yfinance |
-| Backup demo | Streamlit, Plotly |
-| Testing | pytest, GitHub Actions |
-| Deployment | Docker, Vercel frontend, Render backend |
+This was a correctness issue in an earlier version of the project. Fixing it changed the simulation results, and a regression test now protects the behavior.
 
-## Backtest Method
+### The engine is deliberately long-only
 
-1. Load historical OHLCV data for the selected ticker.
-2. Normalize provider output into a predictable schema.
-3. Calculate indicators such as moving averages, RSI, or Bollinger Bands.
-4. Convert indicators into long-only target positions.
-5. Execute position changes while accounting for fees and slippage.
-6. Build strategy equity and buy-and-hold benchmark curves.
-7. Return metrics, drawdown, trade ledger, and exportable data.
+The portfolio holds cash or one long position. That keeps position state, fees, realized PnL, and trade records easy to audit. Short selling, leverage, and multi-asset allocation would require additional margin and risk rules rather than just another UI control.
 
-## Assumptions
+### Benchmarks use cached data
 
-- Long-only portfolio: the simulator holds cash or one long position.
-- Signals are generated from historical close prices.
-- Fees and slippage are applied on executed trades.
-- The benchmark is buy-and-hold over the same selected period.
-- Results are for research and education, not financial advice.
-- Historical data can change if the upstream provider revises records.
+Network timing and upstream data changes make live downloads unsuitable for regression benchmarks. The benchmark suite therefore uses eight deterministic OHLCV fixtures across three date windows and three strategies: 72 scenarios in total.
 
-## Proof Test Case
+### Interfaces are separate from the model
 
-Use this test case in the live app:
+FastAPI validates and serializes requests, while Next.js handles interaction and visualization. The Python package owns the calculations. This separation lets the test suite exercise the engine without starting a browser or web server.
+
+## Strategies
+
+| Strategy | Entry | Exit |
+| --- | --- | --- |
+| SMA crossover | Fast SMA rises above slow SMA | Fast SMA falls below slow SMA |
+| RSI mean reversion | RSI falls below the oversold threshold | RSI rises above the overbought threshold |
+| Bollinger breakout | Close rises above the upper band | Close falls below the center line |
+
+All strategies produce a target position of `1` (long) or `0` (cash). The execution engine turns changes in that target into trades.
+
+## Reproduce the dashboard example
+
+The visible configuration in the screenshot uses:
 
 | Input | Value |
 | --- | --- |
 | Ticker | `AAPL` |
 | Strategy | `SMA Crossover` |
-| Interval | `1d` |
-| Start | `2024-01-01` |
-| End | `2024-12-31` |
-| SMA windows | `17 / 50` |
-| Starting cash | `10000` |
-| Fee bps | `5` |
-| Slippage bps | `5` |
+| Interval | `1h` |
+| Start | `2025-07-01` |
+| End | `2026-07-01` |
+| SMA windows | `17 / 61` |
+| Starting cash | `$10,000` |
+| Fee | `5 bps` |
+| Slippage | `5 bps` |
 
-Expected behavior:
+Run the configuration from the live dashboard. The result should render the performance metrics, equity and drawdown charts, executed trades, assumptions, and both CSV downloads. Exact values can change if the upstream provider revises its history.
 
-- Metrics update after `Run Backtest`.
-- Equity and drawdown charts render.
-- Trades tab shows executed entries/exits or a clear empty state.
-- Assumptions tab reflects the selected parameters.
-- Exports tab provides CSV downloads.
+## Repository layout
 
-## API Example
+```text
+alphanexus/
+  data.py          Market-data loading and normalization
+  indicators.py    SMA, RSI, and Bollinger Bands
+  strategies.py    Indicator-to-position rules
+  backtest.py      Portfolio and execution simulation
+  metrics.py       Risk and performance summaries
+  storage.py       SQLite run history
+api/main.py        FastAPI routes and request models
+frontend/app/      Next.js dashboard
+benchmarks/        Deterministic fixtures and scenario runner
+tests/             Indicator, engine, storage, and benchmark tests
+app.py             Optional Streamlit interface
+```
+
+More detail is available in [docs/architecture.md](docs/architecture.md).
+
+## API
+
+```text
+GET  /health       Service health
+GET  /strategies   Supported strategy metadata
+GET  /backtests    Recent run summaries
+POST /backtests    Run a backtest and save its summary
+```
+
+Example request:
 
 ```bash
 curl -X POST https://alphanexus-api.onrender.com/backtests \
@@ -196,139 +137,77 @@ curl -X POST https://alphanexus-api.onrender.com/backtests \
   }'
 ```
 
-Main endpoints:
+## Run locally
 
-```text
-GET  /health
-GET  /strategies
-GET  /backtests   # recent run history (newest first)
-POST /backtests   # run a backtest and persist its summary
-```
-
-## Local Development
-
-Install Python dependencies:
+Python 3.11 or newer and Node.js 22 are recommended.
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-Run the backend:
-
-```bash
 uvicorn api.main:app --reload
 ```
 
-Run the Next.js frontend:
+In a second terminal:
 
 ```bash
 cd frontend
-cmd /c npm install
-cmd /c npm run dev
+npm install
+npm run dev
 ```
 
-Optional Streamlit demo:
+The frontend runs on `http://127.0.0.1:3000` and the API on `http://127.0.0.1:8000`.
+
+Optional interfaces:
 
 ```bash
 streamlit run app.py
 ```
-
-Run the API in Docker:
 
 ```bash
 docker build -t alphanexus-api .
 docker run -p 8000:8000 alphanexus-api
 ```
 
-The container serves the FastAPI backend on port 8000; the Next.js frontend deploys separately on Vercel.
-
-## Testing
-
-Run backend tests:
+## Tests and benchmark
 
 ```bash
 pytest
-```
-
-Build frontend:
-
-```bash
-cmd /c npm --prefix frontend run build
-```
-
-CI runs both checks on pushes and pull requests to `main`.
-
-## Benchmarking
-
-Run the deterministic backtest benchmark:
-
-```bash
 python benchmarks/run_backtest_benchmark.py
+npm --prefix frontend run build
 ```
 
-Example local result:
+The deterministic benchmark currently covers:
 
 ```text
-Scenarios passed: 72/72 (100.0%)
-Fixture rows processed: 24,120
-Median engine runtime: 13.71 ms
-P95 engine runtime: 20.85 ms
+8 fixtures × 3 date windows × 3 strategies = 72 scenarios
 ```
 
-The benchmark uses cached synthetic OHLCV fixtures instead of live `yfinance` downloads, so it measures the simulation engine rather than network or provider latency. Local timing can vary between runs, so the CI guard enforces a conservative `100 ms` p95 threshold. See [benchmarks/README.md](benchmarks/README.md) and [docs/project-defense.md](docs/project-defense.md).
+CI runs the Python tests, enforces a conservative `100 ms` p95 engine threshold, and builds the production frontend. Timing numbers vary by machine; the fixture matrix and correctness assertions are the reproducible evidence.
 
-## What This Demonstrates
+See [benchmarks/README.md](benchmarks/README.md) for the scenario definitions.
 
-<details>
-<summary><strong>Software engineering</strong></summary>
+## Current boundaries
 
-- Modular backend package design
-- Typed FastAPI request/response models
-- Frontend/backend separation
-- Deterministic benchmark and regression suite
-- Deployment configuration for Render and Vercel
-- CI checks for Python tests and frontend builds
+- Long-only, single-asset portfolios
+- End-of-bar signals executed at the following bar's close
+- Open positions are valued at the final close rather than forcibly liquidated
+- No leverage, short selling, options, or portfolio optimization
+- No walk-forward or out-of-sample parameter selection
+- No market-impact or order-book model beyond configurable slippage
+- Historical data supplied by `yfinance`
+- SQLite history is ephemeral on hosts without a persistent disk
 
-</details>
+These boundaries make the application suitable for learning and comparing simple rules. They also mean its results should not be interpreted as evidence that a strategy would perform the same way in live trading.
 
-<details>
-<summary><strong>Data and analytics</strong></summary>
+## Possible next research steps
 
-- Market data normalization
-- Vectorized indicator calculations
-- Portfolio state simulation
-- Benchmark comparison
-- Risk and performance metrics
+- Walk-forward evaluation and parameter-sensitivity analysis
+- Adjusted-price and corporate-action policy
+- Next-open execution and stronger fill assumptions
+- Multi-asset portfolio construction
+- Comparison against an external benchmark symbol
 
-</details>
+## License and disclaimer
 
-<details>
-<summary><strong>Product thinking</strong></summary>
-
-- Clear assumptions instead of vague trading claims
-- Exportable evidence for results
-- Config badges and semantic tabs
-- A proof test case that recruiters/interviewers can reproduce
-
-</details>
-
-## Interview Explanation
-
-> I built AlphaNexus to understand how analytics products work end to end. The backend fetches market data, computes indicators, generates strategy signals, simulates a portfolio with fees and slippage, and returns risk metrics through FastAPI. The frontend lets a user configure a strategy and inspect the equity curve, drawdown, benchmark comparison, trade ledger, assumptions, and CSV exports.
-
-## Resume Bullet
-
-> Built a full-stack backtesting platform that validates 72 reproducible strategy scenarios with 100% pass rate and sub-30 ms p95 engine runtime locally, by creating cached OHLCV fixtures, a benchmark scenario matrix, and regression tests around a Python/FastAPI analytics engine.
-
-## Roadmap
-
-- Add screenshots and GIF walkthroughs to this README.
-- Add walk-forward testing to reduce overfitting.
-- Add multi-asset portfolio allocation.
-- Add Playwright tests for the deployed frontend flow.
-
-## Disclaimer
-
-This project is a research and education tool. It is not financial advice, and it does not predict future returns.
+This project is for research and education. It is not financial advice and does not predict future returns.
