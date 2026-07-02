@@ -2,7 +2,14 @@
 
 AlphaNexus is a full-stack backtesting workbench for comparing simple, explainable trading rules with buy-and-hold.
 
-[Live dashboard](https://alpha-nexus-mbbqka99o-tja0308s-projects.vercel.app/) · [API documentation](https://alphanexus-api.onrender.com/docs) · [Deployment notes](docs/deployment.md) · [![CI](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml/badge.svg)](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-Frontend-3178C6?logo=typescript&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Dockerfile-2496ED?logo=docker&logoColor=white)
+[![CI](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml/badge.svg)](https://github.com/TJA0308/AlphaNexus/actions/workflows/ci.yml)
+
+[Live dashboard](https://alpha-nexus-mbbqka99o-tja0308s-projects.vercel.app/) | [API documentation](https://alphanexus-api.onrender.com/docs) | [Deployment notes](docs/deployment.md)
 
 ![AlphaNexus dashboard showing performance metrics, an equity curve, and drawdown](docs/dashboard.jpeg)
 
@@ -183,7 +190,7 @@ The deterministic benchmark currently covers:
 8 fixtures × 3 date windows × 3 strategies = 72 scenarios
 ```
 
-CI runs the Python tests, enforces a conservative `100 ms` p95 engine threshold, and builds the production frontend. Timing numbers vary by machine; the fixture matrix and correctness assertions are the reproducible evidence.
+CI runs the Python tests, enforces a conservative `100 ms` p95 engine threshold, builds the production frontend, and verifies the backend container through its health endpoint. Timing numbers vary by machine; the fixture matrix and correctness assertions are the reproducible evidence.
 
 See [benchmarks/README.md](benchmarks/README.md) for the scenario definitions.
 

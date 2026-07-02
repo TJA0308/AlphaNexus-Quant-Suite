@@ -49,3 +49,27 @@ jobs:
       - name: Build frontend
         run: npm run build
         working-directory: frontend
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Build backend image
+        run: docker build --tag alphanexus-api:ci .
+
+      - name: Verify container health
+        run: |
+          docker run --detach --name alphanexus-api --publish 8000:8000 alphanexus-api:ci
+          trap 'docker rm --force alphanexus-api' EXIT
+
+          for attempt in {1..15}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          docker logs alphanexus-api
+          exit 1
